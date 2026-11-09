@@ -1,10 +1,10 @@
-const CACHE = 'meu-carro-v2';
+const CACHE = 'meu-carro-v3';
 const ARQUIVOS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icones/icon-192.png',
+  './icones/icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {

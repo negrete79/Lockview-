@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Diagnóstico</title>
+<style>body{font-family:sans-serif;padding:16px;background:#111;color:#fff}div{background:#222;padding:12px;border-radius:10px;margin:8px 0;word-break:break-all} .ok{color:#00e676} .erro{color:#ff5252} img{width:80px;height:80px;background:#fff;border-radius:10px;margin:4px}</style></head>
+<body><h2>🔍 Diagnóstico MEU-CARRO</h2><div id="saida">Testando...</div>
+<script>
+async function testa(url){
+  try{ let r=await fetch(url); return r.status+' - '+(r.ok?'OK':'FALHOU')+' - tipo: '+r.headers.get('content-type'); }
+  catch(e){ return 'ERRO: '+e.message; }
+}
+(async()=>{
+  let html='';
+  html+='<div><b>URL atual:</b> '+location.href+'</div>';
+  let m=await testa('./manifest.json');
+  html+='<div><b>manifest.json:</b> '+m+'</div>';
+  try{
+    let r=await fetch('./manifest.json'); let j=await r.json();
+    html+='<div class="ok"><b>Manifest leu OK!</b><br>'+JSON.stringify(j,null,2).replace(/\n/g,'<br>')+'</div>';
+    for(let ic of j.icons||[]){
+      let s=await testa(ic.src);
+      html+='<div><b>Ícone '+ic.src+' ('+ic.sizes+'):</b> '+s+'<br><img src="'+ic.src+'" onerror="this.style.border=\'3px solid red\'"></div>';
+    }
+  }catch(e){ html+='<div class="erro"><b>MANIFEST QUEBRADO! Não conseguiu ler o JSON:</b> '+e.message+'</div>'; }
+  let s=await testa('./sw.js'); html+='<div><b>sw.js:</b> '+s+'</div>';
+  html+='<div><b>Service Worker registrado?</b> '+('serviceWorker' in navigator ? 'Sim, navegador suporta' : 'Não')+'</div>';
+  html+='<div><b>Já está instalado como PWA?</b> '+(window.matchMedia('(display-mode: standalone)').matches ? 'SIM - está aberto como app instalado' : 'NÃO - está aberto como site no Chrome')+'</div>';
+  document.getElementById('saida').innerHTML=html;
+})();
+</script></body></html>

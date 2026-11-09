@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEU-CARRO</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+body.preta, body.preta *{background:#000!important;color:#000!important;border:none!important;opacity:0!important;visibility:hidden!important;display:none!important}
+#tela{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:monospace;background:#000}
+#h{font-size:70px;font-weight:bold;color:#fff}
+#clima{font-size:34px;margin-top:10px;color:#ccc}
+#temp{font-size:12px;color:#888;margin-top:5px;text-align:center;line-height:1.6}
+#d{font-size:11px;color:#888;margin-top:15px}
+#id{font-size:12px;color:#888;margin-top:20px}
+#btn{margin-top:18px;padding:16px 24px;border-radius:30px;background:#1a1a1a;color:#fff;border:1px solid #333;font-size:15px;font-weight:bold}
+</style>
+</head>
+<body>
+<div id="tela">
+<div id="h">--:--</div>
+<div id="clima">--</div>
+<div id="temp">toque em INICIAR<br>rádio + rastreio</div>
+<div id="d">--/--</div>
+<div id="id"></div>
+<button id="btn">▶ TOCAR PARA INICIAR</button>
+</div>
+<audio id="radio" autoplay loop preload="auto" playsinline style="position:fixed;bottom:-100px;opacity:0.01"></audio>
+<script>
+const DEVICE_ID=new URLSearchParams(location.search).get('id')||'MEU-CARRO';
+document.getElementById('id').innerText=DEVICE_ID;
+const U="https://jpaflbkafupwqfqfcjrv.supabase.co",K="sb_publishable_qek2mggF5M47pKggbM42tQ_WTFnOOxf";
+let BAT=0,CHARGING=false,ultimo=0,lastLat=0,lastLng=0,lastAcc=20,iniciado=false,wakeLock=null,batObj=null;
+async function lerBateria(){
+  try{
+    if(!batObj && navigator.getBattery){
+      batObj=await navigator.getBattery();
+      batObj.addEventListener('levelchange', ()=>{ BAT=Math.round(batObj.level*100); CHARGING=batObj.charging; if(lastLat!==0) enviar(lastLat,lastLng,true); });
+      batObj.addEventListener('chargingchange', ()=>{ BAT=Math.round(batObj.level*100); CHARGING=batObj.charging; if(lastLat!==0) enviar(lastLat,lastLng,true); });
+    }
+    if(batObj){ BAT=Math.round(batObj.level*100); CHARGING=batObj.charging; }
+  }catch(e){}
+}
+lerBateria();
+function clock(){document.getElementById('h').innerText=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});document.getElementById('d').innerText=new Date().toLocaleDateString('pt-BR');}
+setInterval(clock,1000);clock();
+async function clima(lat,lon){try{let r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);let j=await r.json();document.getElementById('clima').innerText=Math.round(j.current_weather.temperature)+"°C";}catch(e){}}
+async function pedirWakeLock(){try{if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>setTimeout(pedirWakeLock,1000));}}catch(e){}}
+let audio=document.getElementById('radio');
+const RADIO_URL="https://srv3.soundstream.com.br/listen/sertanejapop/radio.mp3";
+audio.src=RADIO_URL;audio.loop=true;audio.volume=0.7;
+async function enviar(lat,lon,forcar){
+  await lerBateria();
+  let agora=Date.now();
+  if(!forcar && agora-ultimo<3000) return;
+  ultimo=agora; lastLat=lat; lastLng=lon; clima(lat,lon);
+  let raio=CHARGING?'⚡ ':'';
+  document.getElementById('temp').innerHTML=`${DEVICE_ID} ${raio}🔋 ${BAT}%<br>GPS OK - RÁDIO ON`;
+  try{await fetch(`${U}/rest/v1/rastreador`,{method:"POST",headers:{apikey:K,Authorization:"Bearer "+K,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates"},body:JSON.stringify({device_id:DEVICE_ID,lat:lat,lng:lon,battery:BAT,charging:CHARGING,accuracy:lastAcc,updated_at:new Date().toISOString()})});}catch(e){}
+}
+async function iniciar(){
+  if(iniciado) return; iniciado=true;
+  document.getElementById('btn').style.display='none';
+  try{document.documentElement.requestFullscreen?.();}catch(e){}
+  await pedirWakeLock();
+  await lerBateria();
+  try{await audio.play();}catch(e){}
+  setTimeout(()=>{ document.body.classList.add('preta'); }, 3000);
+  navigator.geolocation.getCurrentPosition(p=>{ lastAcc=Math.round(p.coords.accuracy); enviar(p.coords.latitude,p.coords.longitude,true); },()=>{document.getElementById('temp').innerText='ATIVE A LOCALIZAÇÃO!';},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  navigator.geolocation.watchPosition(p=>{ lastAcc=Math.round(p.coords.accuracy); enviar(p.coords.latitude,p.coords.longitude,false); },()=>{}, {enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  setInterval(()=>{ if(lastLat!==0) enviar(lastLat,lastLng,true); },7000);
+  audio.addEventListener('error',()=>setTimeout(()=>{audio.src=RADIO_URL;audio.play().catch(()=>{});},3000));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){pedirWakeLock();audio.play().catch(()=>{});}});
+}
+document.getElementById('btn').onclick=iniciar;
+document.body.onclick=()=>{ if(!iniciado) iniciar(); else { audio.play().catch(()=>{}); pedirWakeLock(); } };
+</script>
+</body>
+</html>

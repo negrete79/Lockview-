@@ -9,9 +9,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MEU-CARRO">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="data:image/svg+xml,[STRIPPED]">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icones/icon-192.png">
+<link rel="icon" type="image/png" href="./icones/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -26,7 +26,18 @@ body.dark #map{background:#111}
 .pin span{transform:rotate(45deg)}
 .topo h1{font-size:clamp(16px,4.5vw,20px);color:#111;line-height:1.1}
 .topo small{font-size:clamp(11px,3vw,12px);color:#888}
-.menu{margin-left:auto;font-size:26px;color:#777;padding:0 4px;cursor:pointer}
+.menu{margin-left:auto;font-size:26px;color:#777;padding:0 8px;cursor:pointer;position:relative;user-select:none;line-height:1}
+.menu:active{color:#00c9a7}
+.menu-drop{position:fixed;top:calc(58px + env(safe-area-inset-top));right:10px;z-index:2000;background:#fff;border-radius:14px;box-shadow:0 8px 25px rgba(0,0,0,.25);width:240px;overflow:hidden;display:none;padding:6px 0}
+.menu-drop.aberto{display:block;animation:desce .2s ease}
+@keyframes desce{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.menu-titulo{padding:8px 14px 6px;font-size:11px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.menu-item{display:flex;align-items:center;gap:10px;padding:12px 14px;font-size:14px;font-weight:600;color:#222;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.menu-item:active{background:#f0f0f0}
+.menu-item small{margin-left:auto;font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px}
+.menu-item small.on{background:#00c9a7;color:#fff}
+.menu-item small.off{background:#eee;color:#888}
+.menu-div{height:1px;background:#eee;margin:4px 0}
 .btn-refresh{position:fixed;top:calc(70px + env(safe-area-inset-top));left:12px;z-index:1000;width:52px;height:52px;background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:50%;font-size:24px;box-shadow:none!important;cursor:pointer;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);display:flex!important;align-items:center!important;justify-content:center!important;text-align:center;padding:0!important;line-height:1!important;touch-action:manipulation}
 .btn-refresh span{display:flex;align-items:center;justify-content:center;line-height:1}
 .btn-refresh.girando span{animation:girar .8s linear infinite}
@@ -41,6 +52,7 @@ body.dark #map{background:#111}
 .card-end{margin-top:6px;font-size:clamp(13px,3.8vw,14px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);word-break:break-word;cursor:pointer}
 .card-end.vermelho{color:#ff8a80}
 .card-sub{font-size:clamp(11px,3.2vw,12px);color:rgba(255,255,255,.90);text-shadow:0 1px 3px rgba(0,0,0,.8);margin-top:2px;word-break:break-word}
+.card-sub.alerta{color:#ffcc00!important;font-weight:800}
 .btn-sanfona{width:34px;height:34px;min-width:34px;background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:50%;box-shadow:none!important;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1}
 .btn-sanfona span{display:flex;align-items:center;justify-content:center;transition:transform .35s;line-height:1}
 .btn-sanfona.fechado span{transform:rotate(180deg)}
@@ -80,6 +92,7 @@ body.dark #map{background:#111}
 .btn-waze2{flex:1;background:#1a73e8;color:#fff;border:none;padding:13px 6px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
 .btn-maps2{flex:1;background:#188038;color:#fff;border:none;padding:13px 6px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
 .btn-copiar{width:100%;background:#f0f0f0;border:none;padding:10px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;color:#333;margin-bottom:8px}
+.btn-gps{width:100%;background:#ff9800;color:#fff;border:none;padding:13px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;margin-bottom:8px}
 .btn-instalar{width:100%;background:#00c9a7;color:#fff;border:none;padding:13px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:8px;display:none}
 .btn-instalar.mostrar{display:block}
 .hist-item{background:#f8f9fa;padding:9px;margin-bottom:6px;border-radius:8px;border-left:3px solid #00c9a7;font-size:12px}
@@ -90,6 +103,7 @@ body.dark #map{background:#111}
   .pin{width:32px;height:32px;font-size:18px}
   .topo h1{font-size:15px}
   .topo small{font-size:10px}
+  .menu-drop{top:48px}
   .btn-refresh{top:58px;left:10px;width:44px;height:44px;font-size:20px}
   .btn-street{top:58px;right:12px;width:50px;padding:4px;font-size:10px}
   .card{top:58px;left:62px;transform:none;width:400px;max-width:44vw;padding:10px 12px}
@@ -120,6 +134,11 @@ body.dark .topo{background:#1a1a1a}
 body.dark .topo h1{color:#fff}
 body.dark .topo small{color:#aaa}
 body.dark .menu{color:#ccc}
+body.dark .menu-drop{background:#1e1e1e}
+body.dark .menu-item{color:#eee}
+body.dark .menu-item:active{background:#333}
+body.dark .menu-titulo{color:#aaa}
+body.dark .menu-div{background:#333}
 body.dark .btn-refresh, body.dark .btn-street, body.dark .btn-zoom{background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important;box-shadow:none!important}
 body.dark .btn-seguir{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important}
 body.dark .btn-seguir.on{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important}
@@ -137,7 +156,18 @@ body.dark .btn-copiar{background:#333;color:#fff}
 </head>
 <body class="modo-satelite">
 <div id="map"></div>
-<div class="topo"><div class="pin"><span>G</span></div><div><h1>MEU-CARRO</h1><small id="lastUpdate">Conectando...</small></div><div class="menu">☰</div></div>
+<div class="topo"><div class="pin"><span>G</span></div><div><h1>MEU-CARRO</h1><small id="lastUpdate">Conectando...</small></div><div class="menu" id="btnMenu" onclick="toggleMenu(event)">☰</div></div>
+<div class="menu-drop" id="menuDrop">
+  <div class="menu-titulo">🛤️ Trilha / Histórico</div>
+  <button class="menu-item" onclick="toggleTrilha()">🛤️ Mostrar trilha no mapa <small id="trilhaBadge" class="on">ON</small></button>
+  <button class="menu-item" onclick="limparTrilha()">🧹 Limpar trilha</button>
+  <button class="menu-item" onclick="fecharMenu();abrirPainel()">🕒 Ver histórico</button>
+  <div class="menu-div"></div>
+  <div class="menu-titulo">⚙️ Outros</div>
+  <button class="menu-item" onclick="fecharMenu();usarMeuGPS()">📍 Usar meu GPS agora</button>
+  <button class="menu-item" onclick="fecharMenu();atualizar()">🔄 Atualizar agora</button>
+  <button class="menu-item" onclick="fecharMenu();instalarApp()">📲 Instalar app</button>
+</div>
 <button type="button" class="btn-refresh" id="btnRefresh" onclick="atualizar()"><span>↻</span></button>
 <div class="btn-street" onclick="trocarMapaAlternar()">🛰️<br><span id="txtModo">Satélite</span></div>
 <div class="card" id="cardInfo">
@@ -152,6 +182,7 @@ body.dark .btn-copiar{background:#333;color:#fff}
 <div class="card-end" id="addrDisplay" onclick="forcarRua()" title="Toque para buscar a rua de novo">Buscando localização...</div>
 <div class="card-sub">Lat: <span id="latDisplay">--</span> • Lng: <span id="lngDisplay">--</span> • Zoom: <span id="zoomTxt">17</span> • Precisão: <span id="signalValue">--</span></div>
 <div class="card-sub" id="statusCarregando" style="color:#00e676;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.8)">⚡ Carregando</div>
+<div class="card-sub" id="idadeTxt" class="card-sub">ID: <span id="idTxt">MEU-CARRO</span> • Aguardando...</div>
 <div class="card-sub" id="modoTxt" style="color:#00e676;font-weight:700">🌙 Modo noturno • Auto</div>
 </div>
 </div>
@@ -164,6 +195,7 @@ body.dark .btn-copiar{background:#333;color:#fff}
 <div class="painel-baixo" id="painelBaixo">
 <div class="puxador" onclick="fecharPainel()"></div>
 <button class="btn-instalar" id="btnInstalar" onclick="instalarApp()">📲 INSTALAR APP NA TELA INICIAL</button>
+<button class="btn-gps" onclick="usarMeuGPS()">📍 USAR MEU GPS AGORA - MINHA LOCALIZAÇÃO REAL</button>
 <div class="linha"><div class="mini"><b id="speedText">0 km/h</b><small>Velocidade</small></div><div class="mini"><b id="batteryValue">--%</b><small id="batteryLabel">Bateria do celular</small></div><div class="mini"><b id="signalValue2">--</b><small>Precisão</small></div></div>
 <div class="linha-botoes">
 <button class="btn-waze2" onclick="abrirWaze()">🧭 WAZE</button>
@@ -178,17 +210,19 @@ body.dark .btn-copiar{background:#333;color:#fff}
 const SUPABASE_URL="https://jpaflbkafupwqfqfcjrv.supabase.co";
 const SUPABASE_KEY="sb_publishable_qek2mggF5M47pKggbM42tQ_WTFnOOxf";
 const DEVICE_ID=new URLSearchParams(location.search).get('id')||'MEU-CARRO';
+document.getElementById('idTxt').innerText = DEVICE_ID;
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstalar').classList.add('mostrar'); });
-function instalarApp(){ if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('btnInstalar').classList.remove('mostrar'); }); } else { alert('No seu celular: toque nos 3 pontinhos ⋮ > Adicionar à tela inicial / Instalar app'); } }
-window.addEventListener('appinstalled', ()=>{ document.getElementById('btnInstalar').classList.remove('mostrar'); });
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
-let cardAberto = true;
-function toggleCard(){
-  cardAberto = !cardAberto;
-  document.getElementById('cardInfo').classList.toggle('fechado', !cardAberto);
-  document.getElementById('btnSanfona').classList.toggle('fechado', !cardAberto);
+function instalarApp(){
+  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('btnInstalar').classList.remove('mostrar'); }); }
+  else if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){ alert('No iPhone: toque em Compartilhar ⬆️ > Adicionar à Tela de Início > Adicionar'); }
+  else { alert('No seu celular: toque nos 3 pontinhos ⋮ > Adicionar à tela inicial / Instalar app'); }
 }
+window.addEventListener('appinstalled', ()=>{ document.getElementById('btnInstalar').classList.remove('mostrar'); });
+if(window.matchMedia('(display-mode: standalone)').matches){ document.getElementById('btnInstalar').classList.remove('mostrar'); }
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js').then(()=>console.log('SW ok')).catch(()=>{}); }); }
+let cardAberto = true;
+function toggleCard(){ cardAberto = !cardAberto; document.getElementById('cardInfo').classList.toggle('fechado', !cardAberto); document.getElementById('btnSanfona').classList.toggle('fechado', !cardAberto); }
 function deveSerNoite(){ let h = new Date().getHours(); if(h >= 18 || h < 6) return true; if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return true; return false; }
 function aplicarNoite(){ let noite = deveSerNoite(); document.body.classList.toggle('dark', noite); let txt = document.getElementById('modoTxt'); if(txt) txt.innerText = noite ? '🌙 Modo noturno • Auto' : '☀️ Modo claro • Auto'; if(window.trocarMapa) trocarMapa(window.modoAtual || 'satelite'); }
 setInterval(aplicarNoite, 60000);
@@ -199,9 +233,47 @@ let camadaRua=L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
 let camadaSatelite=L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:20, maxNativeZoom:20}).addTo(map);
 let carroIcon=L.divIcon({html:'<div style="background:#00c9a7;width:22px;height:22px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>',iconSize:[28,28],className:''});
 let marker=L.marker([-20.388,-43.757],{icon:carroIcon}).addTo(map);
+let euIcon=L.divIcon({html:'<div style="background:#4285F4;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>',iconSize:[26,26],className:''});
+let euMarker=null;
 let polyline=L.polyline([], {color:'#00c9a7',weight:5}).addTo(map);
 let pathCoords=[]; let ultimoLat=0, ultimoLng=0, ultimoTempo=0, seguir=true, modoAtual='satelite', movendoProg=false, zoomManual=17, atualizandoAgora=false;
 let ultimaRuaLat=0, ultimaRuaLng=0, buscandoRua=false, ultimaRuaTxt='', latAtualGlobal=0, lngAtualGlobal=0;
+let mostrarTrilha=true;
+function toggleMenu(e){ if(e) e.stopPropagation(); document.getElementById('menuDrop').classList.toggle('aberto'); }
+function fecharMenu(){ document.getElementById('menuDrop').classList.remove('aberto'); }
+document.addEventListener('click', (e)=>{ let drop=document.getElementById('menuDrop'); if(drop && drop.classList.contains('aberto') && !drop.contains(e.target) && e.target.id!=='btnMenu'){ fecharMenu(); } });
+function toggleTrilha(){
+  mostrarTrilha = !mostrarTrilha;
+  localStorage.setItem('mostrarTrilha', mostrarTrilha ? '1' : '0');
+  let badge=document.getElementById('trilhaBadge');
+  badge.innerText = mostrarTrilha ? 'ON' : 'OFF';
+  badge.className = mostrarTrilha ? 'on' : 'off';
+  if(mostrarTrilha){ if(!map.hasLayer(polyline)) polyline.addTo(map); }
+  else { if(map.hasLayer(polyline)) map.removeLayer(polyline); }
+  fecharMenu();
+}
+function limparTrilha(){ pathCoords=[]; polyline.setLatLngs([]); if(!mostrarTrilha){ mostrarTrilha=true; let badge=document.getElementById('trilhaBadge'); badge.innerText='ON'; badge.className='on'; polyline.addTo(map); localStorage.setItem('mostrarTrilha','1'); } fecharMenu(); }
+if(localStorage.getItem('mostrarTrilha')==='0'){ mostrarTrilha=false; document.getElementById('trilhaBadge').innerText='OFF'; document.getElementById('trilhaBadge').className='off'; map.removeLayer(polyline); }
+function usarMeuGPS(){
+  if(!navigator.geolocation){ alert('Seu celular não deixou usar o GPS. Libere a localização no navegador.'); return; }
+  document.getElementById('addrDisplay').innerText='Buscando seu GPS real...';
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    let lat=pos.coords.latitude, lon=pos.coords.longitude;
+    latAtualGlobal=lat; lngAtualGlobal=lon;
+    if(!euMarker) euMarker=L.marker([lat,lon],{icon:euIcon}).addTo(map).bindPopup('📍 VOCÊ ESTÁ AQUI - GPS deste celular');
+    euMarker.setLatLng([lat,lon]);
+    movendoProg=true; map.setView([lat,lon], zoomManual); setTimeout(()=>{movendoProg=false},300);
+    document.getElementById('latDisplay').innerText=lat.toFixed(6);
+    document.getElementById('lngDisplay').innerText=lon.toFixed(6);
+    document.getElementById('signalValue').innerText=Math.round(pos.coords.accuracy)+'m';
+    document.getElementById('signalValue2').innerText=Math.round(pos.coords.accuracy)+'m';
+    document.getElementById('idadeTxt').innerHTML='📍 GPS DESTE CELULAR - agora mesmo';
+    document.getElementById('idadeTxt').className='card-sub';
+    ultimaRuaLat=0; ultimaRuaLng=0; ultimaRuaTxt='';
+    buscarEndereco(lat,lon,true);
+    fecharPainel();
+  }, (err)=>{ alert('Não consegui pegar seu GPS: ' + err.message + '. Libere a localização no navegador e tente de novo.'); }, {enableHighAccuracy:true, timeout:10000, maximumAge:0});
+}
 function zoomMais(){ zoomManual = Math.min(20, map.getZoom()+1); map.setZoom(zoomManual); document.getElementById('zoomTxt').innerText = zoomManual; }
 function zoomMenos(){ zoomManual = Math.max(3, map.getZoom()-1); map.setZoom(zoomManual); document.getElementById('zoomTxt').innerText = zoomManual; }
 function atualizarBtnSeguir(){ let b = document.getElementById('btnSeguir'); b.innerText = seguir ? '📍 Seguir: ON' : '📍 Seguir: OFF'; b.className = 'btn-seguir ' + (seguir ? 'on' : 'off'); }
@@ -237,13 +309,11 @@ async function buscarEndereco(lat,lon,forcar){
     ultimaRuaLat = lat; ultimaRuaLng = lon; ultimaRuaTxt = txt;
     document.getElementById('addrDisplay').innerText = txt;
     document.getElementById('addrDisplay').classList.remove('vermelho');
-  }catch(e){
-    if(!ultimaRuaTxt){
-      document.getElementById('addrDisplay').innerText = 'Toque aqui para buscar a rua de novo';
-    }
-  }finally{ buscandoRua = false; }
+  }catch(e){ if(!ultimaRuaTxt){ document.getElementById('addrDisplay').innerText = 'Toque aqui para buscar a rua de novo'; } }
+  finally{ buscandoRua = false; }
 }
 function calcVelocidade(lat,lon){ let agora=Date.now(); if(!ultimoLat){ ultimoLat=lat; ultimoLng=lon; ultimoTempo=agora; return 0; } let dt=(agora-ultimoTempo)/1000/3600; if(dt===0) return 0; let dLat=(lat-ultimoLat)*Math.PI/180; let dLng=(lon-ultimoLng)*Math.PI/180; let a=Math.sin(dLat/2)**2 + Math.cos(ultimoLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLng/2)**2; let dist=6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); let vel=dist/dt; ultimoLat=lat; ultimoLng=lon; ultimoTempo=agora; if(vel>200) vel=0; return Math.round(vel); }
+function tempoAtras(updated_at){ let diff = Math.floor((Date.now() - new Date(updated_at).getTime())/1000); if(diff < 60) return 'agora mesmo'; if(diff < 3600) return 'há ' + Math.floor(diff/60) + ' min'; if(diff < 86400) return 'há ' + Math.floor(diff/3600) + 'h ' + Math.floor((diff%3600)/60) + ' min'; return 'há ' + Math.floor(diff/86400) + ' dias'; }
 async function atualizar(){
   if(atualizandoAgora) return;
   atualizandoAgora = true;
@@ -253,11 +323,20 @@ async function atualizar(){
   try{
     let r=await fetch(`${SUPABASE_URL}/rest/v1/rastreador?device_id=eq.${DEVICE_ID}&order=updated_at.desc&limit=20`,{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
     let dados=await r.json();
-    if(!dados||!dados.length){ document.getElementById('addrDisplay').innerText='No location to show'; document.getElementById('addrDisplay').classList.add('vermelho'); document.getElementById('lastUpdate').innerText='Sem localização'; return; }
+    if(!dados||!dados.length){
+      let r2=await fetch(`${SUPABASE_URL}/rest/v1/rastreador?order=updated_at.desc&limit=5`,{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
+      let todos=await r2.json();
+      if(todos && todos.length){ let outro = todos[0].device_id || '?'; document.getElementById('addrDisplay').innerText='⚠️ Nenhum dado para ID: '+DEVICE_ID; document.getElementById('idadeTxt').innerHTML='⚠️ Achei outro aparelho: <b>'+outro+'</b> - abra com ?id='+outro; document.getElementById('idadeTxt').className='card-sub alerta'; document.getElementById('lastUpdate').innerText='ID errado - veja abaixo'; }
+      else { document.getElementById('addrDisplay').innerText='No location to show'; document.getElementById('addrDisplay').classList.add('vermelho'); document.getElementById('idadeTxt').innerHTML='⚠️ Nenhum celular enviando localização'; document.getElementById('idadeTxt').className='card-sub alerta'; document.getElementById('lastUpdate').innerText='Sem localização'; }
+      return;
+    }
     let atual=dados[0]; let lat=parseFloat(atual.lat), lon=parseFloat(atual.lng); let vel=calcVelocidade(lat,lon);
     latAtualGlobal=lat; lngAtualGlobal=lon;
+    let idadeSeg = Math.floor((Date.now() - new Date(atual.updated_at).getTime())/1000);
+    let idadeTxt = tempoAtras(atual.updated_at);
+    let velho = idadeSeg > 120;
     marker.setLatLng([lat,lon]);
-    movendoProg=true; map.setView([lat,lon], zoomManual); map.invalidateSize(); setTimeout(()=>{movendoProg=false},200);
+    if(!velho || !euMarker){ movendoProg=true; map.setView([lat,lon], zoomManual); map.invalidateSize(); setTimeout(()=>{movendoProg=false},200); }
     pathCoords.push([lat,lon]); if(pathCoords.length>100) pathCoords.shift(); polyline.setLatLngs(pathCoords);
     document.getElementById('latDisplay').innerText=lat.toFixed(6); document.getElementById('lngDisplay').innerText=lon.toFixed(6);
     atualizarBateria(atual.battery, atual.charging);
@@ -265,9 +344,11 @@ async function atualizar(){
     document.getElementById('speedText').innerText=vel+' km/h';
     document.getElementById('speedPillText').innerText=vel;
     document.getElementById('speedPill').classList.toggle('andando', vel>0);
-    document.getElementById('lastUpdate').innerText='Atualizado '+new Date().toLocaleTimeString('pt-BR');
+    document.getElementById('lastUpdate').innerText='Atualizado '+new Date(atual.updated_at).toLocaleTimeString('pt-BR')+' - '+idadeTxt;
+    if(velho){ document.getElementById('idadeTxt').innerHTML='⚠️ LOCALIZAÇÃO ANTIGA '+idadeTxt.toUpperCase()+' - celular do carro sem enviar! Aperte "Usar meu GPS" para ver a sua real'; document.getElementById('idadeTxt').className='card-sub alerta'; }
+    else { document.getElementById('idadeTxt').innerHTML='ID: <b>'+DEVICE_ID+'</b> • Localização nova - '+idadeTxt; document.getElementById('idadeTxt').className='card-sub'; }
     buscarEndereco(lat,lon,false);
-    let html=''; dados.slice(0,10).forEach(d=>{ let chg = d.charging ? ' ⚡ Carregando' : ''; html+=`<div class="hist-item">${parseFloat(d.lat).toFixed(5)}, ${parseFloat(d.lng).toFixed(5)} • 🔋 ${d.battery}%${chg}<br><small>${new Date(d.updated_at).toLocaleString('pt-BR')}</small></div>`; });
+    let html=''; dados.slice(0,10).forEach(d=>{ let chg = d.charging ? ' ⚡ Carregando' : ''; html+=`<div class="hist-item">${parseFloat(d.lat).toFixed(5)}, ${parseFloat(d.lng).toFixed(5)} • 🔋 ${d.battery}%${chg}<br><small>${new Date(d.updated_at).toLocaleString('pt-BR')} - ${tempoAtras(d.updated_at)}</small></div>`; });
     document.getElementById('historyList').innerHTML=html;
   }catch(e){ document.getElementById('lastUpdate').innerText='Erro ao atualizar - tente de novo'; }
   finally{ if(btn) btn.classList.remove('girando'); atualizandoAgora=false; }

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>🚗 MEU-CARRO</title>
+<meta name="theme-color" content="#00c9a7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MEU-CARRO">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,[STRIPPED]">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:#111}
+#map{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;background:#aad3df}
+body.dark.modo-rua #map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.88) contrast(.92) saturate(.85)}
+body.dark.modo-satelite #map .leaflet-tile-pane{filter:brightness(.82) contrast(1.02) saturate(.95)}
+body.dark #map{background:#111}
+.topo{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.pin{width:clamp(36px,10vw,42px);height:clamp(36px,10vw,42px);background:#00c9a7;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px;flex-shrink:0}
+.pin span{transform:rotate(45deg)}
+.topo h1{font-size:clamp(16px,4.5vw,20px);color:#111;line-height:1.1}
+.topo small{font-size:clamp(11px,3vw,12px);color:#888}
+.menu{margin-left:auto;font-size:26px;color:#777;padding:0 4px;cursor:pointer}
+.btn-refresh{position:fixed;top:calc(70px + env(safe-area-inset-top));left:12px;z-index:1000;width:52px;height:52px;background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:50%;font-size:24px;box-shadow:none!important;cursor:pointer;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);display:flex!important;align-items:center!important;justify-content:center!important;text-align:center;padding:0!important;line-height:1!important;touch-action:manipulation}
+.btn-refresh span{display:flex;align-items:center;justify-content:center;line-height:1}
+.btn-refresh.girando span{animation:girar .8s linear infinite}
+@keyframes girar{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.btn-street{position:fixed;top:calc(70px + env(safe-area-inset-top));right:12px;z-index:1000;background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:12px;padding:6px;box-shadow:none!important;cursor:pointer;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);text-align:center;width:56px}
+.card{position:fixed;top:calc(138px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:1000;background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:18px;padding:14px 16px;width:calc(100% - 24px);max-width:480px;box-shadow:none!important;overflow:hidden;transition:padding .35s}
+.card-body{max-height:300px;overflow:hidden;transition:max-height .45s ease, opacity .3s ease, margin .35s;opacity:1}
+.card.fechado .card-body{max-height:0;opacity:0}
+.card.fechado{padding-bottom:10px}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+.card-top b{font-size:clamp(16px,4.5vw,18px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);flex:1}
+.card-end{margin-top:6px;font-size:clamp(13px,3.8vw,14px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);word-break:break-word;cursor:pointer}
+.card-end.vermelho{color:#ff8a80}
+.card-sub{font-size:clamp(11px,3.2vw,12px);color:rgba(255,255,255,.90);text-shadow:0 1px 3px rgba(0,0,0,.8);margin-top:2px;word-break:break-word}
+.btn-sanfona{width:34px;height:34px;min-width:34px;background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:50%;box-shadow:none!important;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1}
+.btn-sanfona span{display:flex;align-items:center;justify-content:center;transition:transform .35s;line-height:1}
+.btn-sanfona.fechado span{transform:rotate(180deg)}
+.btn-sanfona:active{background:rgba(0,201,167,.25)!important}
+.bateria-box{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.bateria-visual{width:52px;height:26px;border:2.5px solid #fff;border-radius:6px;position:relative;padding:2px;background:rgba(255,255,255,.15);flex-shrink:0}
+.bateria-visual:after{content:'';position:absolute;right:-6px;top:7px;width:4px;height:10px;background:#fff;border-radius:0 2px 2px 0}
+.bateria-fill{height:100%;border-radius:3px;transition:width .5s;display:flex;align-items:center;justify-content:center;font-size:12px}
+.bateria-fill.verde{background:#00e676}
+.bateria-fill.amarelo{background:#ffcc00}
+.bateria-fill.vermelho{background:#ff5252}
+.bateria-txt{font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);line-height:1}
+.bateria-txt small{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,.85)}
+.bateria-txt.carregando{color:#00e676}
+.zoom-col{position:fixed;right:14px;bottom:152px;z-index:1000;display:flex;flex-direction:column;gap:10px}
+.btn-zoom{width:56px;height:56px;background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:50%;font-size:28px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);box-shadow:none!important;cursor:pointer;touch-action:manipulation;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important}
+.btn-zoom:active{background:rgba(0,201,167,.40)!important}
+.baixo{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:center;gap:10px}
+.avatar-baixo{width:72px;height:72px;border-radius:50%;background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45);box-shadow:none!important;cursor:pointer;overflow:hidden;flex-shrink:0;padding:0;display:flex!important;align-items:center!important;justify-content:center!important}
+.avatar-baixo div{width:100%;height:100%;border-radius:50%;background:transparent!important;display:flex;align-items:center;justify-content:center;font-size:32px;line-height:1}
+.speed-pill{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45);border-radius:20px;padding:10px 14px;box-shadow:none!important;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.speed-pill b{font-size:15px;font-weight:800;line-height:1}
+.speed-pill small{font-size:11px;font-weight:600;color:rgba(255,255,255,.85);line-height:1}
+.speed-pill.andando{background:rgba(0,201,167,.25)!important}
+.btn-seguir{position:fixed;bottom:96px;right:14px;z-index:1000;border:1px solid rgba(255,255,255,.45);padding:10px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:none!important;background:rgba(0,201,167,.10)!important;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);transition:all .2s}
+.btn-seguir.on{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff}
+.btn-seguir.off{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff;animation:piscar 1.2s infinite}
+@keyframes piscar{0%,100%{opacity:1}50%{opacity:.6}}
+.painel-baixo{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:#fff;border-radius:18px 18px 0 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -2px 15px rgba(0,0,0,.2);max-height:58vh;max-height:58dvh;overflow-y:auto;display:none}
+.painel-baixo.aberto{display:block}
+.puxador{width:40px;height:5px;background:#ddd;border-radius:10px;margin:0 auto 10px}
+.linha{display:flex;gap:10px;margin-bottom:10px}
+.mini{background:#f8f9fa;border-radius:10px;padding:10px;flex:1;text-align:center;min-width:0}
+.mini b{font-size:clamp(16px,4.5vw,18px);color:#188038;display:block}
+.mini small{font-size:11px;color:#666}
+.linha-botoes{display:flex;gap:8px;margin-bottom:8px}
+.btn-waze2{flex:1;background:#1a73e8;color:#fff;border:none;padding:13px 6px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
+.btn-maps2{flex:1;background:#188038;color:#fff;border:none;padding:13px 6px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
+.btn-copiar{width:100%;background:#f0f0f0;border:none;padding:10px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;color:#333;margin-bottom:8px}
+.btn-instalar{width:100%;background:#00c9a7;color:#fff;border:none;padding:13px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:8px;display:none}
+.btn-instalar.mostrar{display:block}
+.hist-item{background:#f8f9fa;padding:9px;margin-bottom:6px;border-radius:8px;border-left:3px solid #00c9a7;font-size:12px}
+.leaflet-control-zoom{display:none!important}
+.leaflet-control-attribution{font-size:9px!important;background:rgba(255,255,255,.6)!important}
+@media (orientation: landscape) and (max-height: 600px){
+  .topo{padding:6px 12px;padding-top:calc(6px + env(safe-area-inset-top))}
+  .pin{width:32px;height:32px;font-size:18px}
+  .topo h1{font-size:15px}
+  .topo small{font-size:10px}
+  .btn-refresh{top:58px;left:10px;width:44px;height:44px;font-size:20px}
+  .btn-street{top:58px;right:12px;width:50px;padding:4px;font-size:10px}
+  .card{top:58px;left:62px;transform:none;width:400px;max-width:44vw;padding:10px 12px}
+  .card-top b{font-size:15px}
+  .card-end{font-size:12px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-sub{font-size:10px;margin-top:1px}
+  #modoTxt{display:none}
+  #statusCarregando{font-size:10px}
+  .btn-sanfona{width:30px;height:30px;min-width:30px;font-size:15px}
+  .zoom-col{top:50%;bottom:auto;transform:translateY(-50%);right:12px;gap:8px}
+  .btn-zoom{width:44px;height:44px;font-size:22px}
+  .btn-seguir{bottom:16px;right:12px;padding:8px 12px;font-size:11px}
+  .baixo{justify-content:flex-start;left:14px;right:auto;bottom:10px;gap:8px}
+  .avatar-baixo{width:52px;height:52px}
+  .avatar-baixo div{font-size:24px}
+  .speed-pill{padding:8px 12px}
+  .speed-pill b{font-size:13px}
+  .painel-baixo{max-height:82vh;max-height:82dvh;left:50%;transform:translateX(-50%);max-width:480px}
+  .leaflet-control-attribution{display:none!important}
+}
+@media (min-width:768px){
+  .card{max-width:520px}
+  .painel-baixo{left:50%;transform:translateX(-50%);max-width:520px;border-radius:18px 18px 0 0}
+  .baixo{bottom:20px}
+}
+body.dark{background:#111}
+body.dark .topo{background:#1a1a1a}
+body.dark .topo h1{color:#fff}
+body.dark .topo small{color:#aaa}
+body.dark .menu{color:#ccc}
+body.dark .btn-refresh, body.dark .btn-street, body.dark .btn-zoom{background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important;box-shadow:none!important}
+body.dark .btn-seguir{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important}
+body.dark .btn-seguir.on{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important}
+body.dark .btn-sanfona{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important;box-shadow:none!important}
+body.dark .avatar-baixo{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:none!important}
+body.dark .avatar-baixo div{background:transparent!important}
+body.dark .speed-pill{background:rgba(0,201,167,.10)!important;border:1px solid rgba(255,255,255,.45)!important;color:#fff!important}
+body.dark .card{background:rgba(0,0,0,.10)!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:none!important}
+body.dark .painel-baixo{background:#1e1e1e}
+body.dark .mini{background:#2a2a2a}
+body.dark .mini small{color:#aaa}
+body.dark .hist-item{background:#2a2a2a;color:#eee}
+body.dark .btn-copiar{background:#333;color:#fff}
+</style>
+</head>
+<body class="modo-satelite">
+<div id="map"></div>
+<div class="topo"><div class="pin"><span>G</span></div><div><h1>MEU-CARRO</h1><small id="lastUpdate">Conectando...</small></div><div class="menu">☰</div></div>
+<button type="button" class="btn-refresh" id="btnRefresh" onclick="atualizar()"><span>↻</span></button>
+<div class="btn-street" onclick="trocarMapaAlternar()">🛰️<br><span id="txtModo">Satélite</span></div>
+<div class="card" id="cardInfo">
+<div class="card-top" onclick="toggleCard()"><b>MEU-CARRO</b>
+<div class="bateria-box">
+<div class="bateria-visual"><div class="bateria-fill verde" id="bateriaFill" style="width:90%">⚡</div></div>
+<div class="bateria-txt" id="bateriaTxt">90%<small id="bateriaSub">Bateria</small></div>
+</div>
+<button type="button" class="btn-sanfona" id="btnSanfona" onclick="event.stopPropagation();toggleCard()"><span>⌄</span></button>
+</div>
+<div class="card-body">
+<div class="card-end" id="addrDisplay" onclick="forcarRua()" title="Toque para buscar a rua de novo">Buscando localização...</div>
+<div class="card-sub">Lat: <span id="latDisplay">--</span> • Lng: <span id="lngDisplay">--</span> • Zoom: <span id="zoomTxt">17</span> • Precisão: <span id="signalValue">--</span></div>
+<div class="card-sub" id="statusCarregando" style="color:#00e676;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.8)">⚡ Carregando</div>
+<div class="card-sub" id="modoTxt" style="color:#00e676;font-weight:700">🌙 Modo noturno • Auto</div>
+</div>
+</div>
+<div class="zoom-col"><button type="button" class="btn-zoom" onclick="zoomMais()">+</button><button type="button" class="btn-zoom" onclick="zoomMenos()">−</button></div>
+<button type="button" class="btn-seguir on" id="btnSeguir" onclick="toggleSeguir()">📍 Seguir: ON</button>
+<div class="baixo">
+<div class="avatar-baixo" onclick="abrirPainel()"><div>🚗</div></div>
+<div class="speed-pill" id="speedPill" onclick="abrirPainel()"><b id="speedPillText">0</b><small>km/h</small></div>
+</div>
+<div class="painel-baixo" id="painelBaixo">
+<div class="puxador" onclick="fecharPainel()"></div>
+<button class="btn-instalar" id="btnInstalar" onclick="instalarApp()">📲 INSTALAR APP NA TELA INICIAL</button>
+<div class="linha"><div class="mini"><b id="speedText">0 km/h</b><small>Velocidade</small></div><div class="mini"><b id="batteryValue">--%</b><small id="batteryLabel">Bateria do celular</small></div><div class="mini"><b id="signalValue2">--</b><small>Precisão</small></div></div>
+<div class="linha-botoes">
+<button class="btn-waze2" onclick="abrirWaze()">🧭 WAZE</button>
+<button class="btn-maps2" onclick="abrirMaps()">📍 GOOGLE MAPS</button>
+</div>
+<button class="btn-copiar" onclick="copiarLocal()">📋 Copiar localização</button>
+<div style="font-weight:700;font-size:13px;margin-bottom:6px">🕒 Histórico</div>
+<div id="historyList">Carregando...</div>
+<div style="text-align:center;color:#888;font-size:12px;margin-top:8px" onclick="fecharPainel()">↓ Fechar</div>
+</div>
+<script>
+const SUPABASE_URL="https://jpaflbkafupwqfqfcjrv.supabase.co";
+const SUPABASE_KEY="sb_publishable_qek2mggF5M47pKggbM42tQ_WTFnOOxf";
+const DEVICE_ID=new URLSearchParams(location.search).get('id')||'MEU-CARRO';
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstalar').classList.add('mostrar'); });
+function instalarApp(){ if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('btnInstalar').classList.remove('mostrar'); }); } else { alert('No seu celular: toque nos 3 pontinhos ⋮ > Adicionar à tela inicial / Instalar app'); } }
+window.addEventListener('appinstalled', ()=>{ document.getElementById('btnInstalar').classList.remove('mostrar'); });
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+let cardAberto = true;
+function toggleCard(){
+  cardAberto = !cardAberto;
+  document.getElementById('cardInfo').classList.toggle('fechado', !cardAberto);
+  document.getElementById('btnSanfona').classList.toggle('fechado', !cardAberto);
+}
+function deveSerNoite(){ let h = new Date().getHours(); if(h >= 18 || h < 6) return true; if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return true; return false; }
+function aplicarNoite(){ let noite = deveSerNoite(); document.body.classList.toggle('dark', noite); let txt = document.getElementById('modoTxt'); if(txt) txt.innerText = noite ? '🌙 Modo noturno • Auto' : '☀️ Modo claro • Auto'; if(window.trocarMapa) trocarMapa(window.modoAtual || 'satelite'); }
+setInterval(aplicarNoite, 60000);
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', aplicarNoite);
+function atualizarBateria(bat, carregando){ bat = parseInt(bat||0); let carregandoReal = carregando===true || carregando==='true' || carregando===1 || carregando==='1'; let fill = document.getElementById('bateriaFill'); let txt = document.getElementById('bateriaTxt'); let status = document.getElementById('statusCarregando'); fill.style.width = bat + '%'; fill.className = 'bateria-fill ' + (bat>50 ? 'verde' : bat>20 ? 'amarelo' : 'vermelho'); fill.innerText = carregandoReal ? '⚡' : ''; txt.innerHTML = bat + '%<small id="bateriaSub">' + (carregandoReal ? 'Carregando' : 'Bateria') + '</small>'; txt.classList.toggle('carregando', carregandoReal); status.innerText = carregandoReal ? '⚡ Carregando' : (bat<=20 ? '🪫 Bateria fraca' : ''); status.style.display = (carregandoReal || bat<=20) ? 'block' : 'none'; let bv = document.getElementById('batteryValue'); bv.innerText = bat + '%' + (carregandoReal ? ' ⚡' : ''); document.getElementById('batteryLabel').innerText = carregandoReal ? '⚡ Carregando' : 'Bateria do celular'; }
+let map=L.map('map',{zoomControl:false, maxZoom:20, minZoom:3, zoomSnap:1, zoomDelta:1, scrollWheelZoom:true, doubleClickZoom:true, touchZoom:true, dragging:true}).setView([-20.388,-43.757],17);
+let camadaRua=L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20, maxNativeZoom:20});
+let camadaSatelite=L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:20, maxNativeZoom:20}).addTo(map);
+let carroIcon=L.divIcon({html:'<div style="background:#00c9a7;width:22px;height:22px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>',iconSize:[28,28],className:''});
+let marker=L.marker([-20.388,-43.757],{icon:carroIcon}).addTo(map);
+let polyline=L.polyline([], {color:'#00c9a7',weight:5}).addTo(map);
+let pathCoords=[]; let ultimoLat=0, ultimoLng=0, ultimoTempo=0, seguir=true, modoAtual='satelite', movendoProg=false, zoomManual=17, atualizandoAgora=false;
+let ultimaRuaLat=0, ultimaRuaLng=0, buscandoRua=false, ultimaRuaTxt='', latAtualGlobal=0, lngAtualGlobal=0;
+function zoomMais(){ zoomManual = Math.min(20, map.getZoom()+1); map.setZoom(zoomManual); document.getElementById('zoomTxt').innerText = zoomManual; }
+function zoomMenos(){ zoomManual = Math.max(3, map.getZoom()-1); map.setZoom(zoomManual); document.getElementById('zoomTxt').innerText = zoomManual; }
+function atualizarBtnSeguir(){ let b = document.getElementById('btnSeguir'); b.innerText = seguir ? '📍 Seguir: ON' : '📍 Seguir: OFF'; b.className = 'btn-seguir ' + (seguir ? 'on' : 'off'); }
+function toggleSeguir(){ seguir = !seguir; atualizarBtnSeguir(); if(seguir && ultimoLat){ movendoProg = true; map.setView([ultimoLat, ultimoLng], zoomManual); setTimeout(()=>{ movendoProg = false; }, 300); } }
+map.on('dragstart', ()=>{ if(seguir && !movendoProg){ seguir = false; atualizarBtnSeguir(); } });
+map.on('zoomend',()=>{ zoomManual = map.getZoom(); document.getElementById('zoomTxt').innerText = zoomManual; });
+function trocarMapa(m){ modoAtual=m; map.removeLayer(camadaRua); map.removeLayer(camadaSatelite); document.body.classList.remove('modo-rua','modo-satelite'); if(m==='rua'){ camadaRua.addTo(map); document.body.classList.add('modo-rua'); document.getElementById('txtModo').innerText='Rua'; } if(m==='satelite'){ camadaSatelite.addTo(map); document.body.classList.add('modo-satelite'); document.getElementById('txtModo').innerText='Satélite'; } }
+function trocarMapaAlternar(){ if(modoAtual==='satelite') trocarMapa('rua'); else trocarMapa('satelite'); }
+function abrirPainel(){ document.getElementById('painelBaixo').classList.add('aberto'); }
+function fecharPainel(){ document.getElementById('painelBaixo').classList.remove('aberto'); }
+function distanciaM(lat1,lon1,lat2,lon2){ let dLat=(lat2-lat1)*Math.PI/180; let dLng=(lon2-lon1)*Math.PI/180; let a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2; return 6371000*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
+function forcarRua(){ ultimaRuaLat=0; ultimaRuaLng=0; ultimaRuaTxt=''; document.getElementById('addrDisplay').innerText='Buscando rua de novo...'; if(latAtualGlobal) buscarEndereco(latAtualGlobal, lngAtualGlobal, true); }
+async function buscarEndereco(lat,lon,forcar){
+  if(buscandoRua) return;
+  if(!forcar && ultimaRuaLat && distanciaM(lat,lon,ultimaRuaLat,ultimaRuaLng) < 100 && ultimaRuaTxt){ return; }
+  buscandoRua = true;
+  try{
+    let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=pt-BR`);
+    let j = await r.json();
+    let a = j.address || {};
+    let rua = a.road || a.pedestrian || a.footway || a.path || a.cycleway || '';
+    let bairro = a.suburb || a.neighbourhood || a.village || a.hamlet || '';
+    let cidade = a.city || a.town || a.municipality || a.county || '';
+    let estado = a.state || '';
+    let txt = '';
+    if(rua) txt = rua;
+    else if(bairro) txt = 'Estrada sem nome, perto de ' + bairro;
+    else if(cidade) txt = 'Estrada sem nome, perto de ' + cidade;
+    else txt = 'Local sem nome de rua';
+    if(bairro && rua && bairro !== rua) txt += ', ' + bairro;
+    if(cidade && cidade !== bairro) txt += ' - ' + cidade;
+    if(estado) txt += '/' + (estado === 'Minas Gerais' ? 'MG' : estado);
+    ultimaRuaLat = lat; ultimaRuaLng = lon; ultimaRuaTxt = txt;
+    document.getElementById('addrDisplay').innerText = txt;
+    document.getElementById('addrDisplay').classList.remove('vermelho');
+  }catch(e){
+    if(!ultimaRuaTxt){
+      document.getElementById('addrDisplay').innerText = 'Toque aqui para buscar a rua de novo';
+    }
+  }finally{ buscandoRua = false; }
+}
+function calcVelocidade(lat,lon){ let agora=Date.now(); if(!ultimoLat){ ultimoLat=lat; ultimoLng=lon; ultimoTempo=agora; return 0; } let dt=(agora-ultimoTempo)/1000/3600; if(dt===0) return 0; let dLat=(lat-ultimoLat)*Math.PI/180; let dLng=(lon-ultimoLng)*Math.PI/180; let a=Math.sin(dLat/2)**2 + Math.cos(ultimoLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLng/2)**2; let dist=6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); let vel=dist/dt; ultimoLat=lat; ultimoLng=lon; ultimoTempo=agora; if(vel>200) vel=0; return Math.round(vel); }
+async function atualizar(){
+  if(atualizandoAgora) return;
+  atualizandoAgora = true;
+  let btn = document.getElementById('btnRefresh');
+  if(btn) btn.classList.add('girando');
+  document.getElementById('lastUpdate').innerText = 'Atualizando...';
+  try{
+    let r=await fetch(`${SUPABASE_URL}/rest/v1/rastreador?device_id=eq.${DEVICE_ID}&order=updated_at.desc&limit=20`,{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
+    let dados=await r.json();
+    if(!dados||!dados.length){ document.getElementById('addrDisplay').innerText='No location to show'; document.getElementById('addrDisplay').classList.add('vermelho'); document.getElementById('lastUpdate').innerText='Sem localização'; return; }
+    let atual=dados[0]; let lat=parseFloat(atual.lat), lon=parseFloat(atual.lng); let vel=calcVelocidade(lat,lon);
+    latAtualGlobal=lat; lngAtualGlobal=lon;
+    marker.setLatLng([lat,lon]);
+    movendoProg=true; map.setView([lat,lon], zoomManual); map.invalidateSize(); setTimeout(()=>{movendoProg=false},200);
+    pathCoords.push([lat,lon]); if(pathCoords.length>100) pathCoords.shift(); polyline.setLatLngs(pathCoords);
+    document.getElementById('latDisplay').innerText=lat.toFixed(6); document.getElementById('lngDisplay').innerText=lon.toFixed(6);
+    atualizarBateria(atual.battery, atual.charging);
+    document.getElementById('signalValue').innerText=(atual.accuracy||0)+'m'; document.getElementById('signalValue2').innerText=(atual.accuracy||0)+'m';
+    document.getElementById('speedText').innerText=vel+' km/h';
+    document.getElementById('speedPillText').innerText=vel;
+    document.getElementById('speedPill').classList.toggle('andando', vel>0);
+    document.getElementById('lastUpdate').innerText='Atualizado '+new Date().toLocaleTimeString('pt-BR');
+    buscarEndereco(lat,lon,false);
+    let html=''; dados.slice(0,10).forEach(d=>{ let chg = d.charging ? ' ⚡ Carregando' : ''; html+=`<div class="hist-item">${parseFloat(d.lat).toFixed(5)}, ${parseFloat(d.lng).toFixed(5)} • 🔋 ${d.battery}%${chg}<br><small>${new Date(d.updated_at).toLocaleString('pt-BR')}</small></div>`; });
+    document.getElementById('historyList').innerHTML=html;
+  }catch(e){ document.getElementById('lastUpdate').innerText='Erro ao atualizar - tente de novo'; }
+  finally{ if(btn) btn.classList.remove('girando'); atualizandoAgora=false; }
+}
+document.getElementById('btnRefresh').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); atualizar(); });
+function pegarLocal(){ let lat=document.getElementById('latDisplay').innerText; let lon=document.getElementById('lngDisplay').innerText; if(lat==='--') return null; return {lat, lon}; }
+function abrirWaze(){ let l=pegarLocal(); if(!l) return alert('Sem localização ainda'); window.location.href = `waze://?ll=${l.lat},${l.lon}&navigate=yes`; setTimeout(()=>{ window.open(`https://waze.com/ul?ll=${l.lat},${l.lon}&navigate=yes`,'_blank'); }, 800); }
+function abrirMaps(){ let l=pegarLocal(); if(!l) return alert('Sem localização ainda'); window.open(`https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lon}&travelmode=driving`,'_blank'); }
+function copiarLocal(){ let l=pegarLocal(); if(!l) return alert('Sem localização ainda'); let txt = `https://www.google.com/maps?q=${l.lat},${l.lon}`; if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>alert('Localização copiada!')); else alert(txt); }
+aplicarNoite();
+atualizar(); setInterval(atualizar,3000);
+window.addEventListener('resize', ()=>{ map.invalidateSize(); });
+window.addEventListener('orientationchange', ()=>{ setTimeout(()=>{ map.invalidateSize(); }, 300); });
+</script>
+</body>
+</html>

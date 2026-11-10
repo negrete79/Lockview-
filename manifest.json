@@ -2,7 +2,7 @@
   "name": "MEU-CARRO",
   "short_name": "MEU-CARRO",
   "description": "Rastreamento do meu carro em tempo real",
-  "id": "./",
+  "id": "meu-carro-painel",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

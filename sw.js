@@ -1,4 +1,4 @@
-const CACHE = 'meu-carro-v3';
+const CACHE = 'meu-carro-painel-v3';
 const ARQUIVOS = [
   './',
   './index.html',

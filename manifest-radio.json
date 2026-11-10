@@ -1,7 +1,7 @@
 {
   "name": "MEU-CARRO • Sertaneja Pop",
   "short_name": "MEU-CARRO Rádio",
-  "description": "Rádio Sertaneja Pop do MEU-CARRO - ao vivo 24h",
+  "description": "Rádio Sertaneja Pop do MEU-CARRO - ao vivo 24h com rastreio",
   "id": "meu-carro-radio",
   "start_url": "./meu-carro.html",
   "scope": "./",
@@ -12,19 +12,19 @@
   "categories": ["music", "entertainment"],
   "icons": [
     {
-      "src": "icons-radio/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons-radio/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons-radio/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
